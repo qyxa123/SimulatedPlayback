@@ -8,6 +8,13 @@ SimulatedPlayback — When users turn off the screen or mute their device, this 
 
 关闭屏幕或静音时，本系统暂停实际媒体解码与数据请求，但持续推进播放进度，从而节省电量与流量，同时保持播放体验的一致性。
 
+
+Traditional players keep decoding and buffering even when the screen is off, wasting battery and bandwidth.  
+SimulatedPlayback provides an **intelligent simulated progress mode** that stops unnecessary processing while keeping playback continuity.
+
+传统播放器在关闭屏幕后仍持续解码与缓冲，造成电量与流量浪费。  
+SimulatedPlayback 提供一种智能“虚拟播放”模式：停止无意义的资源消耗，但保持进度同步。
+
 ## Components / 组件
 - tampermonkey/: MVP userscript
 - web-extension/: Chrome/Firefox extension
