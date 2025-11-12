@@ -5,6 +5,7 @@
 ![Build](https://img.shields.io/github/actions/workflow/status/yourname/simplay/build.yml?branch=main)
 
 SimulatedPlayback — When users turn off the screen or mute their device, this system stops actual decoding and data fetching while continuously advancing playback progress. It saves battery and data without breaking user experience.
+
 关闭屏幕或静音时，本系统暂停实际媒体解码与数据请求，但持续推进播放进度，从而节省电量与流量，同时保持播放体验的一致性。
 
 ## Components / 组件
