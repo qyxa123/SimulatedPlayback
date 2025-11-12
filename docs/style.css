@@ -1,0 +1,7 @@
+:root { --blue:#1976d2; }
+body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin:0; color:#133; }
+.hero { padding: 40px 20px; background: linear-gradient(135deg, #eaf3ff, #f7fbff); text-align:center; }
+.hero h1 { margin:0 0 10px; color: var(--blue); }
+.btn { display:inline-block; margin:8px; padding:10px 14px; background: var(--blue); color:#fff; border-radius:6px; text-decoration:none; }
+section { max-width: 920px; margin: 24px auto; padding: 0 16px; }
+img { max-width: 100%; height: auto; border:1px solid #dde; border-radius:6px; margin:8px 0; }

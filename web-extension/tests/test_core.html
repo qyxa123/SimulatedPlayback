@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SimulatedPlayback Tests</title>
+</head>
+<body>
+  <video id="v" src="sample.mp4"></video>
+  <script src="../src/sim.js"></script>
+  <script>
+    const assert = (name, ok) => {
+      const el = document.createElement('div');
+      el.textContent = `${ok ? 'PASS' : 'FAIL'} ${name}`;
+      el.style.color = ok ? 'green' : 'red';
+      document.body.appendChild(el);
+    };
+    window.SimPlay.setProgress(5);
+    assert('set/get progress', window.SimPlay.getProgress() === 5);
+    window.SimPlay.start();
+    setTimeout(() => {
+      window.SimPlay.stop(true);
+      assert('stop sets currentTime', document.querySelector('video').currentTime >= 5);
+    }, 1200);
+  </script>
+</body>
+</html>

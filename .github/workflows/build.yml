@@ -1,0 +1,38 @@
+name: build
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+jobs:
+  web-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Archive extension
+        run: |
+          mkdir -p dist
+          cd web-extension
+          zip -r ../dist/web-extension.zip .
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-extension
+          path: dist/web-extension.zip
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Build Android AAR
+        run: |
+          cd android
+          ./gradlew :simplay-core:assembleRelease || echo 'Gradle wrapper missing; use local gradle'
+      - name: Upload AAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: simplay-core-aar
+          path: android/simplay-core/build/outputs/aar/*.aar

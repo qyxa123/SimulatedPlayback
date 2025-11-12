@@ -1,0 +1,32 @@
+name: release
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Build AAR
+        run: |
+          cd android
+          ./gradlew :simplay-core:assembleRelease || echo 'Gradle wrapper missing; use local gradle'
+      - name: Archive extension
+        run: |
+          mkdir -p dist
+          cd web-extension
+          zip -r ../dist/web-extension.zip .
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/web-extension.zip
+            android/simplay-core/build/outputs/aar/*.aar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

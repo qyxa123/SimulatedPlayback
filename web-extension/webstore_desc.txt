@@ -1,0 +1,14 @@
+Title: SimPlay – Simulated Playback
+
+Short Summary:
+Advance video progress without downloading frames to save battery and data.
+
+Permissions Explanation:
+- storage: remember your simulated progress per video URL
+- activeTab, tabs: control simulated mode on the current tab
+- notifications: show a brief confirmation when toggled ON/OFF
+
+Screenshots:
+- docs/images/chrome_screenshot.svg
+- docs/images/android_screenshot.svg
+- docs/images/chrome_screenshot.svg

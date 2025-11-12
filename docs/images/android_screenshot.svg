@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450">
+  <rect width="800" height="450" fill="#f0fff4"/>
+  <text x="50" y="60" font-size="28" fill="#2e7d32">Android App Screenshot (Placeholder)</text>
+  <rect x="50" y="100" width="700" height="300" fill="#ffffff" stroke="#2e7d32"/>
+  <text x="70" y="150" font-size="18" fill="#2e7d32">Buttons: Sim ON / Sim OFF</text>
+</svg>

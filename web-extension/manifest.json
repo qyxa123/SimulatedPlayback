@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "SimPlay – Simulated Playback",
+  "version": "0.1.0",
+  "description": "Advance video progress without downloading frames to save battery and data",
+  "permissions": ["storage", "activeTab", "tabs", "notifications"],
+  "host_permissions": [
+    "https://*.youtube.com/*",
+    "https://*.bilibili.com/*"
+  ],
+  "action": {
+    "default_title": "Simulated Playback",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.youtube.com/*",
+        "https://*.bilibili.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

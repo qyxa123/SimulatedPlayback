@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450">
+  <rect width="800" height="450" fill="#f0f4ff"/>
+  <text x="50" y="60" font-size="28" fill="#1976d2">Chrome Extension Screenshot (Placeholder)</text>
+  <rect x="50" y="100" width="700" height="300" fill="#ffffff" stroke="#1976d2"/>
+  <text x="70" y="150" font-size="18" fill="#1976d2">Popup: Simulated Mode Active</text>
+</svg>
