@@ -4,9 +4,8 @@
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Build](https://img.shields.io/github/actions/workflow/status/yourname/simplay/build.yml?branch=main)
 
-SimulatedPlayback lets you advance media progress without downloading or decoding frames, saving battery and data while preserving user experience.
-
-简体中文：SimulatedPlayback 允许在不下载或解码媒体的情况下推进进度，节省电量与流量，同时保持用户体验。
+SimulatedPlayback — When users turn off the screen or mute their device, this system stops actual decoding and data fetching while continuously advancing playback progress. It saves battery and data without breaking user experience.
+关闭屏幕或静音时，本系统暂停实际媒体解码与数据请求，但持续推进播放进度，从而节省电量与流量，同时保持播放体验的一致性。
 
 ## Components / 组件
 - tampermonkey/: MVP userscript
