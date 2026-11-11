@@ -1,0 +1,12 @@
+.DS_Store
+node_modules/
+android/.gradle/
+android/**/build/
+android/local.properties
+android/.idea/
+*.iml
+dist/*.zip
+dist/popup.png
+docs/metrics-*.csv
+docs/metrics.csv
+docs/report.pdf

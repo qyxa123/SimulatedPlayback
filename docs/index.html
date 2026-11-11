@@ -9,30 +9,31 @@
 <body>
   <header class="hero">
     <h1>SimulatedPlayback</h1>
-    <p>Advance media progress without downloading frames — save battery and data.</p>
-    <a href="../web-extension/" class="btn">Download Chrome Extension</a>
-    <a href="../android/" class="btn">Download Android SDK</a>
+    <p>Pause a video, track virtual progress, and resume at a later position.</p>
+    <a href="https://github.com/qyxa123/SimulatedPlayback/tree/main/web-extension" class="btn">Chromium extension source</a>
+    <a href="https://github.com/qyxa123/SimulatedPlayback/tree/main/android" class="btn">Android integration sample</a>
   </header>
   <section>
-    <h2>Introduction & Features</h2>
+    <h2>Choose when to skip ahead</h2>
+    <p>Simulation pauses actual playback. Elapsed time and playback speed determine the position used when you resume. The skipped interval has no sound or picture.</p>
     <ul>
-      <li>Simulated mode with progress persistence</li>
-      <li>WebExtension for YouTube/Bilibili</li>
-      <li>Android ExoPlayer wrapper</li>
+      <li>Start, resume, or discard a session from the browser popup.</li>
+      <li>Optional hidden-tab and muted-video triggers are off by default.</li>
+      <li>Per-tab browser sessions end on navigation, media change, reload, or close.</li>
+      <li>Android provides an app-level ExoPlayer integration, not a system framework patch.</li>
     </ul>
   </section>
   <section>
-    <h2>Screenshots / Demo</h2>
-    <img src="images/screenshots/chrome_popup.svg" alt="Chrome Extension" />
-    <img src="images/android_screenshot.svg" alt="Android App" />
+    <h2>Scope and limitations</h2>
+    <p>The extension targets seekable, finite-duration YouTube and Bilibili videos. Firefox support is not verified. Live playback is outside the supported scope: known live indicators are detected, but unfamiliar finite DVR streams may evade detection. Detected protected content or ads are rejected.</p>
+    <p>Pausing a media element does not guarantee that a website stops requesting media. Battery savings, zero traffic, and instant resume have not been established. Resuming may require buffering or pressing Play.</p>
+    <p>标签页隐藏与视频静音不等同于设备息屏和系统静音。此功能会跳过离开期间的内容，开启前请确认符合你的使用目的。</p>
   </section>
   <section>
-    <h2>Battery-saving Charts</h2>
-    <p>See benchmark PDF in <code>docs/benchmark_report.pdf</code>.</p>
+    <h2>Measurement and development</h2>
+    <p>No validated performance results are included. Read the <a href="https://github.com/qyxa123/SimulatedPlayback/blob/main/docs/benchmark_report.md">measurement protocol</a> before making resource-saving claims.</p>
+    <p>The SVG images in this repository are illustrative mockups. Use the <a href="https://github.com/qyxa123/SimulatedPlayback">repository instructions</a> to install and test the current source.</p>
   </section>
-  <section>
-    <h2>Contact & GitHub</h2>
-    <p><a href="https://github.com/qyxa123/SimulatedPlayback">https://github.com/qyxa123/SimulatedPlayback</a></p>
-  </section>
+  <footer><p>SimulatedPlayback · Apache-2.0 · Maintainer: Alvin Li</p></footer>
 </body>
 </html>

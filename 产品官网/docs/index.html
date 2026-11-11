@@ -1,136 +1,85 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SimulatedPlayback – Low-Power Playback Progress System</title>
+    <title>SimulatedPlayback — 虚拟播放进度</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
-
 <body>
-
 <header class="hero">
     <div class="container">
         <h1 class="hero-title">Simulated<span class="accent">Playback</span></h1>
-        <p class="subtitle">Next-Gen Low-Power Playback Engine</p>
-        <p class="subsubtitle">节省电量与流量，同时保持播放体验 | 面向系统厂商</p>
+        <p class="subtitle">Pause playback. Keep virtual time.</p>
+        <p class="subsubtitle">暂停真实播放，按经过的时间计算恢复位置</p>
         <div class="hero-actions">
-            <a href="https://github.com/qyxa123/SimulatedPlayback" class="btn primary">View on GitHub</a>
-            <a href="#specs" class="btn secondary">Technical Specs</a>
+            <a href="https://github.com/qyxa123/SimulatedPlayback" class="btn primary">查看源码与安装说明</a>
+            <a href="#specs" class="btn secondary">了解使用边界</a>
         </div>
     </div>
 </header>
-
 <section class="intro" id="specs">
     <div class="container">
-        <h2>System Overview</h2>
-        <p>
-            SimulatedPlayback is a kernel-level playback engine that intelligently pauses media decoding and network I/O when the screen is off or device is muted, while maintaining seamless progress tracking via ultra-low-power timers. Designed for integration into Android ROMs, browser engines, and OEM media stacks.
-        </p>
-
-        <p>当用户关闭屏幕或静音时，本系统暂停真实的媒体解码与数据请求，仅以低功耗方式推进播放进度。专为系统厂商、浏览器内核和OEM媒体栈设计。</p>
+        <h2>你决定何时跳过内容</h2>
+        <p>模拟模式暂停视频，记录开始位置、时间和倍速。恢复时跳转到计算出的新位置。模拟期间没有声音或画面，跳过的内容不会补播。</p>
+        <p>当前项目包含 Chromium 浏览器扩展和 Android ExoPlayer 集成示例。它是供测试与集成的应用层实现，没有提供浏览器内核、Android ROM 或 AOSP 框架补丁。</p>
     </div>
 </section>
-
 <section class="features">
     <div class="container">
-        <h2>System Features</h2>
+        <h2>当前功能</h2>
         <div class="feature-grid">
             <div class="feature">
-                <h3>⚡ 90% Battery Reduction</h3>
-                <p>Zero decoder wake-ups during simulated playback. Verified on Snapdragon 8 Gen 2.</p>
+                <h3>从实际进度开始</h3>
+                <p>根据当前播放位置和倍速计算虚拟进度，并受视频时长限制。</p>
             </div>
             <div class="feature">
-                <h3>📶 Zero Data Waste</h3>
-                <p>Complete suspension of network I/O. No hidden background fetches.</p>
+                <h3>恢复或放弃</h3>
+                <p>在弹窗中开始模拟、恢复到虚拟位置，或放弃这段虚拟进度。</p>
             </div>
             <div class="feature">
-                <h3>⏱ Frame-Perfect Sync</h3>
-                <p>Microsecond-accurate timers maintain playback timeline. Resume without jitter.</p>
+                <h3>可选自动触发</h3>
+                <p>标签页隐藏、视频静音时可自动模拟；默认关闭，由你选择开启。</p>
             </div>
             <div class="feature">
-                <h3>🔄 <50ms Resume Latency</h3>
-                <p>Pre-warmed decoder state. Seamless transition back to real playback.</p>
+                <h3>每个页面独立</h3>
+                <p>页面导航、媒体源变化、刷新或关闭后结束会话，不把旧视频进度带到新视频。</p>
             </div>
         </div>
     </div>
 </section>
-
-<section class="screenshots">
-    <div class="container">
-        <h2>Integration Examples</h2>
-        <div class="image-grid">
-            <img src="assets/extension_demo.png" alt="Extension Screenshot">
-            <img src="assets/android_demo.png" alt="Android Screenshot">
-        </div>
-        <p class="note">*Reference implementations for Chrome, Firefox, and Android media framework</p>
-    </div>
-</section>
-
 <section class="compare">
     <div class="container">
-        <h2>Validated Performance Gains</h2>
+        <h2>能力与限制</h2>
         <table>
-            <tr>
-                <th>Mode</th>
-                <th>Battery (30 min)</th>
-                <th>Data Usage</th>
-                <th>CPU Load</th>
-                <th>Thermal</th>
-            </tr>
-            <tr>
-                <td>Normal Playback</td>
-                <td>10–12%</td>
-                <td>200–500 MB</td>
-                <td>High</td>
-                <td>+8°C</td>
-            </tr>
-            <tr>
-                <td>SimulatedPlayback</td>
-                <td>~1%</td>
-                <td>0 MB</td>
-                <td>Near-zero</td>
-                <td>+0.3°C</td>
-            </tr>
+            <thead><tr><th>项目</th><th>当前范围</th></tr></thead>
+            <tbody>
+                <tr><td>浏览器</td><td>Chromium Manifest V3；Firefox 兼容性尚未验证。</td></tr>
+                <tr><td>媒体</td><td>时长已知、可跳转的点播视频。会拒绝已识别的直播、受保护内容和广告；未知播放器的有限时长 DVR 可能无法识别，直播不在支持范围内。</td></tr>
+                <tr><td>网络</td><td>暂停播放无法保证网站停止 MSE 拉流或其他请求，不承诺零流量。</td></tr>
+                <tr><td>耗电与恢复时间</td><td>暂无经过验证的节电比例或延迟数据；恢复可能需要缓冲。</td></tr>
+                <tr><td>自动触发</td><td>检测页面可见性与视频元素音量，不检测设备息屏或系统静音。</td></tr>
+            </tbody>
         </table>
     </div>
 </section>
-
 <section class="install">
     <div class="container">
-        <h2>Integration Kits</h2>
-
-        <h3>Browser Engine Patch</h3>
-        <p>Chromium patchset: <code>src/media/base/simulated_playback.cc</code></p>
-
-        <h3>Android Media Framework</h3>
-        <p>AOSP module: <code>frameworks/av/media/libmediaplayer</code></p>
+        <h2>开始测试</h2>
+        <h3>Chromium 扩展</h3>
+        <p>下载源码，在浏览器扩展管理页启用开发者模式，加载 <code>web-extension/</code> 文件夹。打开或刷新 YouTube、Bilibili 视频页面，再打开扩展弹窗。</p>
+        <h3>Android 示例</h3>
+        <p>按仓库中 <a href="https://github.com/qyxa123/SimulatedPlayback/blob/main/android/README.md">Android 构建说明</a>运行示例并集成到自己的播放器。</p>
+        <p>在依赖某个网站的兼容性前，请先测试正常视频的开始、恢复、切换视频及后台行为。</p>
     </div>
 </section>
-
 <section class="contact">
     <div class="container">
-        <h2>Licensing & Partnership</h2>
-        <p>Commercial licensing, technical support, and custom integration available for OEMs and browser vendors.</p>
-        <p>GitHub: <a href="https://github.com/qyxa123">qyxa123</a></p>
+        <h2>测量与反馈</h2>
+        <p>本项目尚未提供验证过的性能报告。请按 <a href="https://github.com/qyxa123/SimulatedPlayback/blob/main/docs/benchmark_report.md">测量流程</a>记录真实数据，并在反馈时附上设备、浏览器版本和复现步骤。</p>
+        <p>GitHub: <a href="https://github.com/qyxa123/SimulatedPlayback">qyxa123/SimulatedPlayback</a></p>
     </div>
 </section>
-
-<footer>
-    <p>© 2025 SimulatedPlayback Project · Apache-2.0 License</p>
-</footer>
-
-<script>
-(function(){
-  var imgs = document.querySelectorAll('.image-grid img');
-  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450"><rect width="100%" height="100%" fill="#f2f2f2"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#666" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif" font-size="20">Placeholder</text></svg>';
-  var data = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
-  imgs.forEach(function(img){ img.addEventListener('error', function(){ img.src = data; }); });
-})();
-</script>
-
+<footer><p>SimulatedPlayback Project · Apache-2.0 License · Maintainer: Alvin Li</p></footer>
 </body>
 </html>

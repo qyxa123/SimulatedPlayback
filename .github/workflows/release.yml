@@ -1,32 +1,40 @@
 name: release
+
 on:
   push:
-    tags:
-      - 'v*'
+    tags: ['v*']
+
+permissions:
+  contents: read
+
 jobs:
+  verify:
+    uses: ./.github/workflows/build.yml
+
   publish:
+    needs: verify
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - name: Check release version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          node -e 'const m = require("./web-extension/manifest.json"); if (process.env.RELEASE_TAG !== `v${m.version}`) throw new Error("Tag must match extension version");'
+      - uses: actions/download-artifact@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
-      - name: Build AAR
-        run: |
-          cd android
-          ./gradlew :simplay-core:assembleRelease || echo 'Gradle wrapper missing; use local gradle'
-      - name: Archive extension
-        run: |
-          mkdir -p dist
-          cd web-extension
-          zip -r ../dist/web-extension.zip .
-      - name: Create Release
+          name: web-extension
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: simplay-core-aar
+          path: dist
+      - name: Publish tested artifacts
         uses: softprops/action-gh-release@v2
         with:
+          fail_on_unmatched_files: true
           files: |
             dist/web-extension.zip
-            android/simplay-core/build/outputs/aar/*.aar
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            dist/*-release.aar

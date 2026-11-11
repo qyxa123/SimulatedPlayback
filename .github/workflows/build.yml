@@ -1,38 +1,64 @@
 name: build
+
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
 jobs:
   web-extension:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Archive extension
-        run: |
-          mkdir -p dist
-          cd web-extension
-          zip -r ../dist/web-extension.zip .
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test extension
+        run: node --test web-extension/tests/*.test.cjs
+      - name: Package extension
+        run: node scripts/package-extension.cjs
+      - uses: actions/upload-artifact@v4
         with:
           name: web-extension
           path: dist/web-extension.zip
+          if-no-files-found: error
+
   android:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
-      - name: Build Android AAR
-        run: |
-          cd android
-          ./gradlew :simplay-core:assembleRelease || echo 'Gradle wrapper missing; use local gradle'
-      - name: Upload AAR
-        uses: actions/upload-artifact@v4
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+          log-accepted-android-sdk-licenses: false
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.2'
+      - name: Test and build Android library and sample
+        working-directory: android
+        run: gradle --no-daemon testDebugUnitTest :simplay-core:assembleRelease :sample-app:assembleDebug
+      - uses: actions/upload-artifact@v4
         with:
           name: simplay-core-aar
-          path: android/simplay-core/build/outputs/aar/*.aar
+          path: android/simplay-core/build/outputs/aar/*-release.aar
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-sample
+          path: android/sample-app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+      - name: Upload Android test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-test-reports
+          path: android/**/build/reports/tests/
+          if-no-files-found: ignore

@@ -1,20 +1,34 @@
-# Simulated Playback — OEM/Platform Adoption Proposal
+# SimulatedPlayback: integration notes
 
-## Section 1: Problem & Motivation
-Mobile devices waste battery and data when apps keep streams open or decode frames unnecessarily. Users expect progress continuity without resource drain. OEMs and platforms need a controllable mode to reduce costs while preserving UX.
+## Purpose
+Pause real media playback while a user intentionally skips an interval.
+Compute a virtual position from elapsed time and resume at that position.
+The skipped interval has no audio or video output.
 
-## Section 2: Solution (SimulatedPlayback)
-Suspend real playback and network; advance logical progress via a timer; persist per media URL; resume at the correct position seamlessly. Android: ExoPlayer wrapper suspends media source and runs a timer. Web: `<video>` hook via extension/player plugin.
+## Implementations
+The Chromium extension controls an HTML video element on supported sites.
+The Android sample integrates a manager with an app-owned ExoPlayer.
+This repository does not contain Chromium or AOSP framework patches.
 
-## Section 3: Metrics (battery/data saving)
-Expected ranges (10 min): Battery −30–60%, Data −90–100%, CPU −50–80%. See benchmark report with charts (battery, network, CPU).
+## Timing and lifecycle
+Anchor virtual time to the actual playback position and playback speed.
+Calculate elapsed time instead of counting periodic timer callbacks.
+Clamp progress to the known duration and reject unsupported media.
+Do not reuse progress after a media identity changes.
+Browser sessions end on page reload; automatic triggers are opt-in.
 
-## Section 4: Integration Path
-- System-level: platform media service API for simulated mode and policy toggles
-- App-level: player wrapper/controller to pause, release source, persist, and restore
+## Network limits
+Pausing an HTML video and changing preload cannot stop every site request.
+MSE playback and site-managed fetches need player-specific integration.
+Android source loading can be stopped by its app-owned player.
+This does not stop unrelated application or operating-system traffic.
 
-## Section 5: Potential Partners
-OEMs, streaming providers, education/e-learning platforms, low-bandwidth regions.
+## Evidence and next steps
+No verified power savings, traffic savings, or resume latency are supplied.
+Measure both modes under controlled conditions with raw trace data.
+Test buffering, autoplay rules, source changes, and device lifecycle events.
+Use docs/benchmark_report.md for the measurement protocol.
 
-Images: Chrome Extension, Android App, Charts
-QR: https://github.com/yourname/simplay
+## Project
+https://github.com/qyxa123/SimulatedPlayback
+Apache-2.0. Maintainer: Alvin Li.

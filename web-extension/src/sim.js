@@ -1,130 +1,143 @@
-(() => {
-  const k = (url, src) => `${url}|${src || ''}`;
-  const g = (key) => {
-    try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; }
-  };
-  const s = (key, obj) => { localStorage.setItem(key, JSON.stringify(obj)); };
-  const f = () => document.querySelector('video');
-  const b = () => {
-    const list = performance.getEntriesByType('resource');
-    let bytes = 0;
-    for (const e of list) {
-      if (typeof e.transferSize === 'number') bytes += e.transferSize;
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.SimPlay = api;
+})(typeof globalThis === 'object' ? globalThis : this, () => {
+  'use strict';
+
+  // No interval: elapsed wall time includes suspended/background tabs.
+  class Controller {
+    constructor({ now = Date.now, changed = () => {} } = {}) {
+      this.now = now;
+      this.changed = changed;
+      this.session = null;
+      this.error = '';
     }
-    return bytes;
-  };
-  const m = {
-    running: false,
-    startTs: 0,
-    timer: null,
-    metrics: { simSeconds: 0, bytes: 0 }
-  };
-  const start = () => {
-    if (m.running) return;
-    const v = f();
-    if (!v) return;
-    const key = k(location.href, v.currentSrc || v.src);
-    v.pause();
-    v.preload = 'none';
-    m.running = true;
-    m.startTs = Date.now();
-    m.metrics.bytes = b();
-    m.timer = setInterval(() => {
-      const prev = g(key) || { t: 0 };
-      prev.t += 1;
-      s(key, prev);
-      m.metrics.simSeconds += 1;
-    }, 1000);
-  };
-  const stop = (resume) => {
-    if (!m.running) return;
-    const v = f();
-    const key = v ? k(location.href, v.currentSrc || v.src) : null;
-    clearInterval(m.timer);
-    m.timer = null;
-    m.running = false;
-    m.metrics.bytes = Math.max(0, b() - m.metrics.bytes);
-    if (resume && v && key) {
-      const p = g(key) || { t: 0 };
-      try { v.currentTime = p.t; } catch {}
-      v.play().catch(() => {});
+
+    problem(video) {
+      if (!video) return '没有找到视频，请先打开并播放一个视频。';
+      if (video.mediaKeys) return '暂不支持受 DRM 保护的视频。';
+      if (video.readyState < 1 || !Number.isFinite(video.duration) || video.duration <= 0) {
+        return '仅支持已加载时长的点播视频，暂不支持直播。';
+      }
+      if (!video.seekable || !video.seekable.length) return '视频暂时无法跳转，请播放几秒后重试。';
+      if (!Number.isFinite(video.playbackRate) || video.playbackRate <= 0) return '不支持当前播放速度。';
+      if (video.ended || video.currentTime >= video.duration) return '视频已结束。';
+      return '';
     }
-  };
-  const getProgress = () => {
-    const v = f();
-    if (!v) return 0;
-    const key = k(location.href, v.currentSrc || v.src);
-    const p = g(key);
-    return p ? p.t : 0;
-  };
-  const setProgress = (t) => {
-    const v = f();
-    if (!v) return;
-    const key = k(location.href, v.currentSrc || v.src);
-    s(key, { t: Math.max(0, Math.floor(t)) });
-  };
-  const panel = () => {
-    let el = document.getElementById('simplay-panel');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'simplay-panel';
-      el.style.position = 'fixed';
-      el.style.bottom = '64px';
-      el.style.right = '16px';
-      el.style.padding = '8px 10px';
-      el.style.background = 'rgba(0,0,0,0.7)';
-      el.style.color = '#fff';
-      el.style.fontSize = '12px';
-      el.style.borderRadius = '6px';
-      el.style.zIndex = '2147483647';
-      document.body.appendChild(el);
+
+    position() {
+      const s = this.session;
+      if (!s) return null;
+      return Math.min(s.duration, Math.max(0, s.position + Math.max(0, this.now() - s.at) / 1000 * s.rate));
     }
-    el.textContent = `sim:${m.metrics.simSeconds}s bytes:${m.metrics.bytes}`;
-  };
-  const toggleBtn = () => {
-    let btn = document.getElementById('simplay-toggle');
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.id = 'simplay-toggle';
-      btn.textContent = 'Sim OFF';
-      btn.style.position = 'fixed';
-      btn.style.bottom = '16px';
-      btn.style.right = '16px';
-      btn.style.padding = '8px 10px';
-      btn.style.background = '#1976d2';
-      btn.style.color = '#fff';
-      btn.style.border = 'none';
-      btn.style.borderRadius = '6px';
-      btn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
-      btn.style.cursor = 'pointer';
-      btn.style.zIndex = '2147483647';
-      document.body.appendChild(btn);
-      btn.addEventListener('click', () => {
-        const on = btn.dataset.on === '1';
-        if (on) {
-          btn.dataset.on = '0';
-          btn.textContent = 'Sim OFF';
-          stop(true);
-        } else {
-          btn.dataset.on = '1';
-          btn.textContent = 'Sim ON';
-          start();
+
+    valid(video, key) {
+      const s = this.session;
+      return !s || (s.video === video && s.key === key && s.source === (video.currentSrc || video.src));
+    }
+
+    validate(video, key) {
+      if (!this.valid(video, key)) this.cancel('视频已切换，已取消旧视频的模拟进度。');
+    }
+
+    start(video, key, reason = 'manual') {
+      this.validate(video, key);
+      if (this.session) return true;
+      this.error = this.problem(video);
+      if (this.error) return false;
+      const s = {
+        video, key, source: video.currentSrc || video.src,
+        position: video.currentTime, at: this.now(), rate: video.playbackRate,
+        duration: video.duration, wasPlaying: !video.paused,
+        preload: video.preload, reason, listeners: []
+      };
+      this.session = s;
+      // pause() reduces decoding; preload is only a hint, not a network block.
+      video.pause();
+      video.preload = 'none';
+      const listen = (name, fn) => {
+        video.addEventListener(name, fn);
+        s.listeners.push([name, fn]);
+      };
+      listen('ratechange', () => {
+        const position = this.position();
+        if (!Number.isFinite(video.playbackRate) || video.playbackRate <= 0) {
+          this.cancel('播放速度不受支持，模拟已停止。');
+          return;
         }
-        panel();
+        s.position = position;
+        s.at = this.now();
+        s.rate = video.playbackRate;
+        this.changed();
       });
+      // An explicit seek/play or a source replacement takes precedence.
+      for (const name of ['play', 'seeking', 'emptied', 'loadedmetadata']) {
+        listen(name, () => this.cancel('播放器状态已改变，模拟已停止。'));
+      }
+      listen('durationchange', () => {
+        if (video.duration !== s.duration) this.cancel('视频时长已改变，模拟已停止。');
+      });
+      this.changed();
+      return true;
     }
-  };
-  const wireVideoEvents = () => {
-    const v = f();
-    if (!v) return;
-    v.addEventListener('play', () => { stop(false); panel(); });
-    v.addEventListener('pause', () => { panel(); });
-    v.addEventListener('loadedmetadata', () => { panel(); });
-  };
-  const init = () => {
-    toggleBtn();
-    wireVideoEvents();
-    panel();
-  };
-  window.SimPlay = { start, stop, getProgress, setProgress, init };
-})();
+
+    detach() {
+      const s = this.session;
+      if (!s) return null;
+      this.session = null;
+      for (const [name, fn] of s.listeners) s.video.removeEventListener(name, fn);
+      s.video.preload = s.preload;
+      return s;
+    }
+
+    cancel(message = '') {
+      this.detach();
+      this.error = message;
+      this.changed();
+    }
+
+    async resume(video, key) {
+      this.validate(video, key);
+      if (!this.session) return false;
+      const target = this.position();
+      const s = this.detach();
+      this.error = '';
+      const ranges = video.seekable;
+      let seekable = false;
+      for (let i = 0; i < ranges.length; i++) {
+        if (target >= ranges.start(i) && target <= ranges.end(i)) seekable = true;
+      }
+      if (!seekable) {
+        this.error = '目标位置暂不可跳转；已保留原位置，请使用播放器手动跳转。';
+        this.changed();
+        return false;
+      }
+      try {
+        video.currentTime = target;
+        if (s.wasPlaying && target < s.duration) await video.play();
+      } catch {
+        this.error = '自动恢复未成功，请在播放器中手动点击播放。';
+        this.changed();
+        return false;
+      }
+      this.changed();
+      return true;
+    }
+
+    status(video, key) {
+      this.validate(video, key);
+      return {
+        active: !!this.session,
+        reason: this.session?.reason || null,
+        position: this.session ? this.position() : (video?.currentTime || 0),
+        duration: Number.isFinite(video?.duration) ? video.duration : 0,
+        rate: this.session?.rate || video?.playbackRate || 1,
+        available: !this.problem(video),
+        error: this.error,
+        unavailableReason: this.problem(video)
+      };
+    }
+  }
+  return { Controller };
+});

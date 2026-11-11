@@ -1,16 +1,30 @@
 <!doctype html>
-<html>
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Simulated Playback</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
   <script src="popup.js" defer></script>
-  </head>
+</head>
 <body>
-  <div class="status" id="status">
-    <span class="badge" id="modeBadge">Normal Mode</span>
-    <span>⏱ <span class="timer" id="timer">0s</span></span>
-  </div>
-  <div class="toggle" id="toggle"><div class="knob"></div></div>
+  <header><span class="logo">S<span>▶</span></span><div><h1>SimPlay</h1><p>让时间继续，给播放按下暂停</p></div><span class="version">0.2</span></header>
+  <main>
+    <section class="card" aria-label="播放状态">
+      <div class="status"><span id="modeBadge" class="badge">正在连接…</span><span id="rate">1×</span></div>
+      <div class="clock"><strong id="timer">00:00</strong><span>/ <span id="duration">00:00</span></span></div>
+      <progress id="progress" value="0" max="1" aria-label="播放进度"></progress>
+      <p id="positionLabel">当前播放位置</p>
+      <button id="toggle" class="primary" type="button" disabled>开始模拟</button>
+      <button id="cancel" class="secondary" type="button" hidden>放弃模拟进度，停在原位置</button>
+    </section>
+    <p id="message" role="status" aria-live="polite"></p>
+    <fieldset><legend>自动模式 <span>默认关闭</span></legend>
+      <label><span>切到后台时模拟<small>回到页面时恢复</small></span><input id="autoHidden" type="checkbox"></label>
+      <label><span>视频静音时模拟<small>取消视频静音时恢复</small></span><input id="autoMuted" type="checkbox"></label>
+    </fieldset>
+    <aside>模拟期间没有声音或画面，恢复会跳过这段内容。暂停视频可能减少解码，但网站仍可能缓冲或联网，不能保证零流量。</aside>
+  </main>
+  <footer>仅限可跳转的点播 · YouTube / Bilibili</footer>
 </body>
 </html>
