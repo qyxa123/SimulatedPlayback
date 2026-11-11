@@ -1,14 +1,28 @@
 Title: SimPlay – Simulated Playback
 
 Short Summary:
-Advance video progress without downloading frames to save battery and data.
+Pause a video, track virtual elapsed progress, and resume at a later position.
 
-Permissions Explanation:
-- storage: remember your simulated progress per video URL
-- activeTab, tabs: control simulated mode on the current tab
-- notifications: show a brief confirmation when toggled ON/OFF
+Description:
+An experimental Chromium extension for YouTube and Bilibili on-demand video.
+Start simulation manually, resume at the calculated position, or discard it.
+Optional hidden-tab and muted-video triggers are off by default.
+Simulation skips content; it does not play audio or video in the background.
+Sessions are per tab and end on navigation, source change, reload, or close.
 
-Screenshots:
-- docs/images/chrome_screenshot.svg
-- docs/images/android_screenshot.svg
-- docs/images/chrome_screenshot.svg
+Limits:
+Finite-duration, seekable media is required. Known live indicators and detected
+protected content or advertisements are rejected; some finite DVR streams may
+evade detection. Live playback is outside the supported scope. Website streaming
+requests can continue while paused; zero data use and battery savings are
+not guaranteed. Resume may buffer or require pressing Play on the website.
+
+This file is draft listing text, not evidence of a published store listing.
+Use actual screenshots of the tested build for any store submission;
+the repository's existing SVG images are illustrative mockups.
+
+Permissions:
+- storage: save opt-in hidden-tab and muted-video preferences locally.
+- Content scripts: run on YouTube and Bilibili to control the page's video.
+Virtual progress remains in the current tab's page session, without analytics
+or remote storage. No notification or broad tab-access permission is requested.

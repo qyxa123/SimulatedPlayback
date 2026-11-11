@@ -1,90 +1,59 @@
 # SimulatedPlayback
 
-![Stars](https://img.shields.io/github/stars/qyxa123/SimulatedPlayback?style=social)
-![License](https://img.shields.io/badge/license-Apache--2.0-blue)
-![Build](https://img.shields.io/github/actions/workflow/status/qyxa123/SimulatedPlayback/build.yml?branch=main)
+Pause a video while keeping a virtual playback position, then resume at the position calculated from elapsed time. This repository contains a Chromium extension and an Android player integration sample.
 
-SimulatedPlayback — When users turn off the screen or mute their device, this system stops actual decoding and data fetching while continuously advancing playback progress. It saves battery and data without breaking user experience.
+暂停真实播放，以经过的时间计算虚拟进度；恢复时跳转到新位置。适合明确希望跳过离开期间内容的场景。模拟期间没有画面或声音，恢复时跳过的内容不会补播。
 
-关闭屏幕或静音时，本系统暂停实际媒体解码与数据请求，但持续推进播放进度，从而节省电量与流量，同时保持播放体验的一致性。
+## What works / 功能
 
-Traditional players keep decoding and buffering even when the screen is off, wasting battery and bandwidth.
+- Start from the current playback position, including playback speed and duration limits.
+- Calculate progress from elapsed time rather than counting timer callbacks.
+- In the browser popup, start simulation, resume at the virtual position, or discard it and keep the original position.
+- Optionally start automatically when the tab is hidden or the video is muted. Both options are off by default.
+- Keep each browser tab independent and discard a session when its video or page changes.
+- Android: integrate the manager with an ExoPlayer instance; see the [Android guide](android/README.md).
 
-SimulatedPlayback provides an intelligent simulated progress mode that stops unnecessary processing while keeping playback continuity.
+## Install the extension / 安装浏览器扩展
 
-传统播放器在关闭屏幕后仍持续解码与缓冲，造成电量与流量浪费。
-SimulatedPlayback 提供一种智能“虚拟播放”模式：停止无意义的资源消耗，但保持进度同步。
+1. Download or clone this repository and extract it if necessary.
+2. In Chrome, open `chrome://extensions` and enable **Developer mode**. In Edge, use `edge://extensions`.
+3. Choose **Load unpacked** and select the `web-extension/` directory.
+4. Open or reload a YouTube or Bilibili video page, start a seekable video, and open the extension popup.
+5. Click **开始模拟** to start. Use **恢复到此位置** to jump to the calculated position, or **放弃模拟进度，停在原位置** to abandon the virtual progress.
 
-## Components / 组件
-- tampermonkey/: MVP userscript
-- web-extension/: Chrome/Firefox extension
-- android/: Kotlin SDK + sample
-- docs/: Proposal, benchmarks, site
+请加载源码中的 `web-extension/` 文件夹。扩展更新后，需要重新加载扩展和视频页面。设置中的“标签页隐藏”不等同于检测设备息屏，“视频静音”也不等同于检测系统音量。
 
-## Screenshots / 截图
-![Chrome Extension](docs/images/screenshots/chrome_popup.svg)
-![Android App](docs/images/android_screenshot.svg)
+See the [extension guide](web-extension/README.md) for limitations and verification steps. Firefox compatibility has not been verified.
 
-## 🎧 SimulatedPlayback — Intelligent Low-Power Playback Progress System
-SimulatedPlayback introduces a new way for media players to operate when the user turns off the screen or mutes the device. Instead of continuing real decoding and network buffering, the system pauses actual playback tasks while accurately advancing the playback progress in a lightweight, low-power mode.
+## Limits / 使用边界
 
-当用户关闭屏幕或静音设备时，SimulatedPlayback 会暂停真实的媒体解码与网络请求，仅通过低功耗计时逻辑推进播放进度，从而在节省电量与流量的同时保持播放体验的连续性。
+The browser extension pauses the media element and temporarily sets `preload="none"`. A website can continue downloading media through its own streaming code, especially Media Source Extensions. **Zero network traffic and a particular battery saving are not guaranteed or measured.** This extension does not block site requests.
 
-### 🚀 Highlights / 亮点
-- 📴 Progress continues even when screen is off / 进度在息屏时仍继续
-- 🔋 Significant battery savings / 大幅节省电量
-- 📶 Zero data consumption during simulated mode / 模拟模式零流量
-- 🎬 Instant resume / 返回后瞬时恢复
-- 💻 Cross-platform implementation / 跨平台实现（Chrome + Android）
+Simulation requires loaded, seekable, finite-duration media. Unknown-duration media, detected live streams, protected media, and advertisements are rejected. Live detection includes known YouTube controls and Bilibili's live domain; a finite-duration DVR stream in an unfamiliar player may not be identified. Live playback is outside the supported scope. Test a normal video before depending on a site's behavior. Resume can require buffering, and browser autoplay rules can require another click on Play.
 
-### Why Simulated Playback?
-传统播放器在以下情况下仍然继续解码与拉流：屏幕关闭、设备静音、用户暂时不关注画面、只需“进度继续”。这导致不必要的电量与流量消耗和资源占用。SimulatedPlayback 的核心思想是：在不需要观看或听到的时刻，不做任何多余的处理，只保持进度。
+Browser progress belongs to the current page session. Reloading or closing the page ends that session; virtual progress is not restored on the next visit. Automatic modes operate on tab visibility and the video element's muted/volume state, not device screen or system mute state. Playback and watch-history accounting remain controlled by the website.
 
-### ⚙️ How It Works
-息屏/静音时：暂停解码、停止网络、启动轻量计时器、以真实速率推进进度，并将时间点保存在 `localStorage`/`SharedPreferences`。用户返回时：按记录进度跳转、重新启动解码、无缝恢复。
+目前是供测试和集成的项目，不是浏览器内核补丁或 Android 系统模块。没有经过验证的省电比例、零流量保证或恢复延迟指标。网站变更、广告切换和播放器重新创建都可能影响兼容性。
 
-### Comparison / 对比
-| 模式 | 解码线程 | 网络请求 | 30 分钟耗电 | 数据消耗 |
-|---|---|---|---:|---:|
-| 普通播放 | 持续占用 | 持续缓冲 | ~10–12% | 200–500 MB |
-| SimulatedPlayback | 停止 | 0 | ~1% | 0 MB |
+## Development
 
-## 📦 Installation & Usage / 安装与使用
+- [Browser implementation and tests](web-extension/README.md)
+- [Android build and tests](android/README.md)
+- [Measurement protocol](docs/benchmark_report.md): how to collect evidence; no performance results are included.
+- [Design and integration notes](docs/proposal.md)
+- [Contributing](CONTRIBUTING.md)
 
-### Chrome Extension
-- Open `chrome://extensions`, enable Developer Mode
-- Load unpacked folder `web-extension/`
-- Open YouTube/Bilibili → use popup toggle to enable Simulated Mode
+From the repository root, run the automated checks and rebuild the extension package:
 
-## 快速开始（Chrome）
-- 打开 `chrome://extensions`，启用开发者模式
-- 选择“加载已解压的扩展程序”，选择 `web-extension/`
-- 打开 YouTube/Bilibili → 在弹窗中开启模拟模式
+```sh
+node --test web-extension/tests/*.test.cjs
+node scripts/package-extension.cjs
+```
 
-### Android SDK
-- Open `android/` in Android Studio
-- Build and run `sample-app`
-- Use Sim ON/OFF buttons to switch between modes
+The package is written to `dist/web-extension.zip`. Extract it before using **Load unpacked**. The SVG images in `docs/images/` are illustrative mockups, not captured test evidence. See the extension guide for the optional real-browser harness and its validation limits.
 
-## 快速开始（Android）
-- 在 Android Studio 打开 `android/`
-- 构建并运行 `sample-app`
-- 使用 Sim ON/OFF 按钮切换模式
+## License and contact
 
-## 📄 Proposal & Benchmarks / 提案与评测
-- `docs/proposal.pdf` 技术+商业提案
-- `docs/benchmark_report.md` 数据对比与生成说明
-- `docs/plot_report.py` 自动生成图表脚本
-- `docs/benchmark_android.sh` Android 采集脚本
+Apache-2.0; see [LICENSE](LICENSE).
 
-## License / 许可
-Apache-2.0. 详见 `LICENSE`。
-
-## Contributing / 贡献
-- Issues and PRs welcome
-- 参见 `CONTRIBUTING.md`
-
-## Contact / 联系
-- Maintainer: Alvin Li
-- GitHub: https://github.com/qyxa123/SimulatedPlayback
-- Email: qyxa123@gmail.com
+Maintainer: Alvin Li · [GitHub](https://github.com/qyxa123/SimulatedPlayback) · qyxa123@gmail.com

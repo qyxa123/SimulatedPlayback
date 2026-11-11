@@ -1,41 +1,46 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Limited sampler only: the operator must select the corresponding app mode.
 PKG="com.simplay.sample"
+MODE="${MODE:-}"
 DURATION="${DURATION:-300}"
 STEP="${STEP:-5}"
 OUT_DIR="$(cd "$(dirname "$0")" && pwd)"
-CSV="$OUT_DIR/metrics.csv"
-ts() { date +%s; }
-uid() { adb shell dumpsys package $PKG | grep -m1 userId= | sed -E 's/.*userId=([0-9]+)/\1/'; }
-battery() { adb shell dumpsys battery | grep -m1 level | sed -E 's/.*: *([0-9]+)/\1/'; }
-net_bytes() { local U=$(uid); adb shell cat /proc/net/xt_qtaguid/stats | awk -v u=$U 'NR>1 && $3==u {rx+=$6; tx+=$8} END {print rx" "tx}'; }
-cpu_pct() { adb shell top -n 1 | grep $PKG | awk '{print $9}' | sed 's/%//'; }
-echo "time_s,mode,battery_level,rx_bytes,tx_bytes,cpu_percent" > "$CSV"
-run_mode() {
-  local MODE=$1
-  echo "Running $MODE for ${DURATION}s"
-  START_TS=$(ts)
-  START_BAT=$(battery)
-  read START_RX START_TX < <(net_bytes)
-  ELAPSED=0
-  while [ "$ELAPSED" -le "$DURATION" ]; do
-    CUR_BAT=$(battery)
-    read RX TX < <(net_bytes)
-    CPU=$(cpu_pct)
-    NOW=$(ts)
-    echo "$((NOW-START_TS)),$MODE,$CUR_BAT,$RX,$TX,${CPU:-0}" >> "$CSV"
-    sleep "$STEP"
-    ELAPSED=$((ELAPSED+STEP))
-  done
-  END_BAT=$(battery)
-  read END_RX END_TX < <(net_bytes)
-  BAT_DROP=$((START_BAT-END_BAT))
-  RX_DELTA=$((END_RX-START_RX))
-  TX_DELTA=$((END_TX-START_TX))
-  echo "summary_$MODE,battery_drop,rx_bytes,tx_bytes" >> "$CSV"
-  echo "summary,$BAT_DROP,$RX_DELTA,$TX_DELTA" >> "$CSV"
+if [[ "$MODE" != real && "$MODE" != sim ]]; then
+  printf '%s\n' 'Set MODE=real or MODE=sim after selecting that mode in the app.' >&2
+  exit 2
+fi
+if [[ ! "$DURATION" =~ ^[0-9]+$ || ! "$STEP" =~ ^[1-9][0-9]*$ ]]; then
+  printf '%s\n' 'DURATION must be a nonnegative integer; STEP must be a positive integer.' >&2
+  exit 2
+fi
+command -v adb >/dev/null || { printf '%s\n' 'adb is required.' >&2; exit 1; }
+adb get-state >/dev/null
+CSV="$OUT_DIR/metrics-$MODE.csv"
+if [[ -e "$CSV" ]]; then
+  printf 'Refusing to overwrite %s; move the existing capture before retrying.\n' "$CSV" >&2
+  exit 1
+fi
+battery() {
+  adb shell dumpsys battery | awk '/^[[:space:]]*level:/ {gsub(/\r/, "", $2); print $2; exit}'
 }
-run_mode real
-run_mode sim
-python3 "$OUT_DIR/plot_report.py" "$CSV" "$OUT_DIR/benchmark_report.pdf" || true
-echo "Wrote $CSV and $OUT_DIR/benchmark_report.pdf"
+cpu_pct() {
+  adb shell dumpsys cpuinfo | awk -v pkg="$PKG" '
+    index($2, "/" pkg ":") {gsub(/%/, "", $1); print $1; exit}'
+}
+printf 'Sampling %s for %ss. Verify this mode is already enabled in the app.\n' "$MODE" "$DURATION"
+printf '%s\n' 'Network counters are not collected; empty CSV fields mean unavailable.'
+printf '%s\n' 'time_s,mode,battery_level,rx_bytes,tx_bytes,cpu_percent' > "$CSV"
+START_TS=$(date +%s)
+while true; do
+  NOW=$(date +%s)
+  ELAPSED=$((NOW - START_TS))
+  BATTERY=$(battery)
+  CPU=$(cpu_pct)
+  [[ "$BATTERY" =~ ^[0-9]+$ ]] || BATTERY=""
+  [[ "$CPU" =~ ^[0-9]+([.][0-9]+)?$ ]] || CPU=""
+  printf '%s,%s,%s,,,%s\n' "$ELAPSED" "$MODE" "$BATTERY" "$CPU" >> "$CSV"
+  (( ELAPSED >= DURATION )) && break
+  sleep "$STEP"
+done
+printf 'Wrote %s. Read docs/benchmark_report.md before interpreting these samples.\n' "$CSV"

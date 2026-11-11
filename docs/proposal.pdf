@@ -12,24 +12,38 @@ endobj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 5 0 obj
-<< /Length 1516 >>
+<< /Length 2166 >>
 stream
 BT
 /F1 12 Tf
-1 0 0 1 40 760 Tm (Simulated Playback  OEM/Platform Adoption Proposal) Tj
-1 0 0 1 40 734 Tm (Section 1: Problem & Motivation) Tj
-1 0 0 1 40 720 Tm (Mobile devices waste battery and data when apps keep streams open or decode frames unnecessarily. Users expect progress continuity without resource drain. OEMs and platforms need a controllable mode to reduce costs while preserving UX.) Tj
-1 0 0 1 40 694 Tm (Section 2: Solution \(SimulatedPlayback\)) Tj
-1 0 0 1 40 680 Tm (Suspend real playback and network; advance logical progress via a timer; persist per media URL; resume at the correct position seamlessly. Android: ExoPlayer wrapper suspends media source and runs a timer. Web: `<video>` hook via extension/player plugin.) Tj
-1 0 0 1 40 654 Tm (Section 3: Metrics \(battery/data saving\)) Tj
-1 0 0 1 40 640 Tm (Expected ranges \(10 min\): Battery 3060%, Data 90100%, CPU 5080%. See benchmark report with charts \(battery, network, CPU\).) Tj
-1 0 0 1 40 614 Tm (Section 4: Integration Path) Tj
-1 0 0 1 40 600 Tm (- System-level: platform media service API for simulated mode and policy toggles) Tj
-1 0 0 1 40 586 Tm (- App-level: player wrapper/controller to pause, release source, persist, and restore) Tj
-1 0 0 1 40 560 Tm (Section 5: Potential Partners) Tj
-1 0 0 1 40 546 Tm (OEMs, streaming providers, education/e-learning platforms, low-bandwidth regions.) Tj
-1 0 0 1 40 520 Tm (Images: Chrome Extension, Android App, Charts) Tj
-1 0 0 1 40 506 Tm (QR: https://github.com/yourname/simplay) Tj
+1 0 0 1 40 760 Tm (SimulatedPlayback: integration notes) Tj
+1 0 0 1 40 734 Tm (Purpose) Tj
+1 0 0 1 40 720 Tm (Pause real media playback while a user intentionally skips an interval.) Tj
+1 0 0 1 40 706 Tm (Compute a virtual position from elapsed time and resume at that position.) Tj
+1 0 0 1 40 692 Tm (The skipped interval has no audio or video output.) Tj
+1 0 0 1 40 666 Tm (Implementations) Tj
+1 0 0 1 40 652 Tm (The Chromium extension controls an HTML video element on supported sites.) Tj
+1 0 0 1 40 638 Tm (The Android sample integrates a manager with an app-owned ExoPlayer.) Tj
+1 0 0 1 40 624 Tm (This repository does not contain Chromium or AOSP framework patches.) Tj
+1 0 0 1 40 598 Tm (Timing and lifecycle) Tj
+1 0 0 1 40 584 Tm (Anchor virtual time to the actual playback position and playback speed.) Tj
+1 0 0 1 40 570 Tm (Calculate elapsed time instead of counting periodic timer callbacks.) Tj
+1 0 0 1 40 556 Tm (Clamp progress to the known duration and reject unsupported media.) Tj
+1 0 0 1 40 542 Tm (Do not reuse progress after a media identity changes.) Tj
+1 0 0 1 40 528 Tm (Browser sessions end on page reload; automatic triggers are opt-in.) Tj
+1 0 0 1 40 502 Tm (Network limits) Tj
+1 0 0 1 40 488 Tm (Pausing an HTML video and changing preload cannot stop every site request.) Tj
+1 0 0 1 40 474 Tm (MSE playback and site-managed fetches need player-specific integration.) Tj
+1 0 0 1 40 460 Tm (Android source loading can be stopped by its app-owned player.) Tj
+1 0 0 1 40 446 Tm (This does not stop unrelated application or operating-system traffic.) Tj
+1 0 0 1 40 420 Tm (Evidence and next steps) Tj
+1 0 0 1 40 406 Tm (No verified power savings, traffic savings, or resume latency are supplied.) Tj
+1 0 0 1 40 392 Tm (Measure both modes under controlled conditions with raw trace data.) Tj
+1 0 0 1 40 378 Tm (Test buffering, autoplay rules, source changes, and device lifecycle events.) Tj
+1 0 0 1 40 364 Tm (Use docs/benchmark_report.md for the measurement protocol.) Tj
+1 0 0 1 40 338 Tm (Project) Tj
+1 0 0 1 40 324 Tm (https://github.com/qyxa123/SimulatedPlayback) Tj
+1 0 0 1 40 310 Tm (Apache-2.0. Maintainer: Alvin Li.) Tj
 ET
 endstream
 endobj
@@ -44,5 +58,5 @@ xref
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-1879
+2529
 %%EOF
